@@ -29,7 +29,7 @@ namespace DocumentAnalyzer
                 string content = File.ReadAllText(filePath);
 
                 //Count words
-                string[] words = content.Split(' ', '\n', '\r','\t');
+                string[] words = content.Split(new[]{' ', '\n', '\r','\t'},     StringSplitOptions.RemoveEmptyEntries);
                 int wordCount = words.Length;
 
                 //Display results

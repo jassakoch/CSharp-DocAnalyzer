@@ -1,0 +1,17 @@
+ Paulina Koch
+ 1850 Line 34 Perth East
+ Shakespeare, ON N0B 2P0
+ pjassakoch@gmail.com
+ 519-616-1285
+December 5,, 2025
+Manulife Recruitment Team
+Waterloo, ON
+Dear Hiring Team,
+I am applying for the Associate Full Stack Engineer position on Manulife’s Digitization and Automation team. I am a backend-focused developer with hands-on experience building APIs, testing routes, working with MongoDB, and writing clean, reliable server-side logic. I am currently expanding my skills into C#, .NET, and Azure fundamentals, and I am confident that my strong backend foundation and ability to learn quickly will allow me to contribute meaningfully to your team.
+In my recent project work, I built and tested a full backend application with Express, MongoDB, Vitest, and Supertest, covering user authentication and CRUD operations. This experience strengthened my understanding of API design, data validation, database interactions, and test automation—skills directly aligned with Manulife’s focus on building, testing, and maintaining reliable internal tools.
+I am also actively learning C# and .NET to broaden my backend capabilities and become versatile across multiple stacks. My experience with JavaScript, Node.js, and REST architecture helps me quickly understand new languages and frameworks, and I am excited to bring this adaptability into your environment. Your team's work with Azure, SQL, automation tools, and emerging technologies like OpenAI and LLM-based solutions is especially motivating to me, and aligns with the direction I want to grow.
+My background as a former educator strengthened my communication, adaptability, and problem-solving skills—qualities that help me work effectively with both technical and non-technical team members. I thrive in collaborative environments and enjoy contributing to shared goals, participating in agile practices, and continuously improving processes.
+I am enthusiastic about the opportunity to join Manulife, contribute to your automation initiatives, and continue growing within a supportive and innovative team. 
+Sincerely,
+Paulina Koch
+
