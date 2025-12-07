@@ -46,6 +46,36 @@ namespace DocumentAnalyzer
                 string[] words = content.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries);
                 int wordCount = words.Length;
 
+
+                //Prompt for keywords;
+                Console.Write("Enter keywords(comma-separated): ");
+
+                //Grab input
+                string? keywordInput = Console.ReadLine();
+
+                //split ;
+
+                if (string.IsNullOrWhiteSpace(keywordInput))
+                {
+                    Console.WriteLine("No keywords entered. Skipping keyword analysis");
+                }
+                else
+                {
+
+                    string[] keywords = keywordInput.Split(',');
+                                
+
+                //create dictionary
+                Dictionary<string, int> keywordCounts = new Dictionary<string, int>();
+
+                //Populate dictionary with keywords
+                foreach (string keyword in keywords)
+                {
+                    string cleanKeyword = keyword.Trim().ToLower();
+                    keywordCounts[cleanKeyword] = 0;
+                }
+                }
+
                 //Create a dictionary to count word frequency
                 Dictionary<string, int> wordFrequency = new Dictionary<string, int>();
 
@@ -65,7 +95,7 @@ namespace DocumentAnalyzer
                         wordFrequency[lowerWord] = 1;
                     }
                 }
-                //Display topo5 words
+                //Display top5 words
                 Console.WriteLine("\nTop 5 Most Common Words:");
                 var topWords = wordFrequency.OrderByDescending(x => x.Value).Take(5);
                 foreach (var item in topWords)
