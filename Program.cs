@@ -1,7 +1,8 @@
-﻿// Document Analyzer - A C# Learning Project
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace DocumentAnalyzer
 {
@@ -17,119 +18,121 @@ namespace DocumentAnalyzer
         public string ReadAll(string path) => File.ReadAllText(path);
     }
 
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static readonly HashSet<string> DefaultStopwords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            Console.WriteLine("===Document Analyzer ===");
-            Console.WriteLine("Simple Word Counter\n");
+            "a","an","the","and","to","of","in","for","on","with","is","it","this","that",
+            "i","you","we","they","he","she","my","your","as","at","by","from","be","or","not"
+        };
 
-            //Ask user for file path
-            Console.Write("Enter the path to your test file: ");
+        static int Main(string[] args)
+        {
+            Console.WriteLine("=== Document Analyzer ===");
+            Console.WriteLine("Simple Word Counter and Keyword Checker\n");
+
+            Console.Write("Enter the path to your text file: ");
             string? filePath = Console.ReadLine();
-
             if (string.IsNullOrWhiteSpace(filePath))
             {
                 Console.WriteLine("No file path entered. Exiting.");
-                return;
+                return 1;
             }
 
-            //Check if file exsists
-            if (File.Exists(filePath))
-            {
-
-                //Read the entire file via injected text source
-                ITextSource textSource = new FileTextSource();
-                string content = textSource.ReadAll(filePath);
-
-                //Count words
-                string[] words = content.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                int wordCount = words.Length;
-
-
-                //Prompt for keywords
-                Console.Write("Enter keywords (comma-separated): ");
-                string? keywordInput = Console.ReadLine();
-
-                Dictionary<string, int>? keywordCounts = null;
-                if (!string.IsNullOrWhiteSpace(keywordInput))
-                {
-                    string[] keywords = keywordInput.Split(',');
-                    keywordCounts = new Dictionary<string, int>();
-
-                    //Populate dictionary with keywords, cleaned
-                    foreach (string keyword in keywords)
-                    {
-                        string cleanKeyword = keyword.Trim().ToLower();
-                        if (cleanKeyword.Length == 0) continue; // skip empty entries
-                        keywordCounts[cleanKeyword] = 0;
-                    }
-                }
-
-                //Create a dictionary to count word frequency
-                Dictionary<string, int> wordFrequency = new Dictionary<string, int>();
-
-                //Loop through each word (update word freq and optional keyword hits)
-                foreach (string word in words)
-                {
-                    //convert to lowercase 
-                    string lowerWord = word.ToLower();
-
-                    // Count keywords if provided
-                    if (keywordCounts != null && keywordCounts.ContainsKey(lowerWord))
-                    {
-                        keywordCounts[lowerWord]++;
-                    }
-
-                    if (wordFrequency.ContainsKey(lowerWord))
-                    {
-                        wordFrequency[lowerWord]++;
-                    }
-                    else
-                    {
-                        //otherwise, add it withcount of 1
-                        wordFrequency[lowerWord] = 1;
-                    }
-                }
-                if(keywordCounts !=null)
-                {
-                foreach (var kvp in keywordCounts)
-                {
-                    if (kvp.Value == 0)
-                    {
-                        Console.WriteLine($" - {kvp.Key}");
-                    }
-                }
-                }
-
-                //Display top5 words
-                Console.WriteLine("\nTop 5 Most Common Words:");
-                var topWords = wordFrequency.OrderByDescending(x => x.Value).Take(5);
-                foreach (var item in topWords)
-                {
-                    Console.WriteLine($"{item.Key}: {item.Value} times");
-                }
-
-                //Display results
-                Console.WriteLine($"\nFile analyzed successfully!");
-                Console.WriteLine($"Total words: {wordCount}");
-
-                // If keywords were provided, show their counts
-                if (keywordCounts != null)
-                {
-                    Console.WriteLine("\nKeyword hits:");
-                    foreach (var kvp in keywordCounts)
-                    {
-                        Console.WriteLine($"{kvp.Key}: {kvp.Value} times");
-                    }
-                }
-
-            }
-            else
+            if (!File.Exists(filePath))
             {
                 Console.WriteLine("File not found. Please check the path.");
-
+                return 2;
             }
+
+            ITextSource textSource = new FileTextSource();
+            string content;
+            try
+            {
+                content = textSource.ReadAll(filePath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to read file: {ex.Message}");
+                return 3;
+            }
+
+            // Raw split to get an initial token list
+            var rawTokens = content.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            int rawWordCount = rawTokens.Length;
+
+            var tokenNormalizer = new Regex("[^\\w#]", RegexOptions.Compiled);
+
+            Console.Write("Enter keywords (comma-separated), or leave blank: ");
+            string? keywordInput = Console.ReadLine();
+
+            Dictionary<string, int>? keywordCounts = null;
+            if (!string.IsNullOrWhiteSpace(keywordInput))
+            {
+                var keywords = keywordInput.Split(',')
+                    .Select(k =>
+                    {
+                        var normalized = k.Trim().ToLowerInvariant();
+                        normalized = tokenNormalizer.Replace(normalized, string.Empty);
+                        return normalized;
+                    })
+                    .Where(k => k.Length > 0);
+                keywordCounts = keywords.Distinct().ToDictionary(k => k, k => 0);
+            }
+
+            var wordFrequency = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            int meaningfulTokens = 0;
+
+            foreach (var token in rawTokens)
+            {
+                var lower = token.ToLowerInvariant();
+                lower = tokenNormalizer.Replace(lower, string.Empty);
+
+                if (string.IsNullOrEmpty(lower) || lower.Length <= 1) continue;
+                if (DefaultStopwords.Contains(lower)) continue;
+
+                meaningfulTokens++;
+
+                if (keywordCounts != null && keywordCounts.ContainsKey(lower))
+                {
+                    keywordCounts[lower]++;
+                }
+
+                if (wordFrequency.ContainsKey(lower))
+                    wordFrequency[lower]++;
+                else
+                    wordFrequency[lower] = 1;
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("File analyzed successfully!");
+            Console.WriteLine($"Raw token count: {rawWordCount}");
+            Console.WriteLine($"Meaningful token count (after filtering): {meaningfulTokens}");
+
+            if (keywordCounts != null)
+            {
+                Console.WriteLine("\nKeyword hits:");
+                foreach (var kvp in keywordCounts)
+                {
+                    Console.WriteLine($"{kvp.Key}: {kvp.Value} times");
+                }
+
+                var missing = keywordCounts.Where(k => k.Value == 0).Select(k => k.Key).ToList();
+                if (missing.Count > 0)
+                {
+                    Console.WriteLine("\nKeywords not found:");
+                    foreach (var m in missing)
+                        Console.WriteLine($" - {m}");
+                }
+            }
+
+            Console.WriteLine("\nTop 5 Most Common Words:");
+            foreach (var pair in wordFrequency.OrderByDescending(x => x.Value).Take(5))
+            {
+                Console.WriteLine($"{pair.Key}: {pair.Value} times");
+            }
+
+            return 0;
         }
     }
 }
